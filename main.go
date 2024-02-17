@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -15,15 +16,20 @@ func main() {
 	fmt.Print("Введите выражение: ")
 	fmt.Scan(&input)
 
-	result := calculate(input)
+	result, err := calculate(input)
+	if err != nil {
+		fmt.Println("Ошибка:", err)
+		return
+	}
+
 	fmt.Println("Результат:", result)
 }
 
-func calculate(input string) string {
+func calculate(input string) (string, error) {
 	operators := []string{"+", "-", "*", "/"}
 	operator := ""
 	for _, op := range operators {
-		if strings.Contains(input, op) { //используется для проверки заданных букв, присутствующих в данной строке или нет
+		if strings.Contains(input, op) {
 			operator = op
 			break
 		}
@@ -31,23 +37,25 @@ func calculate(input string) string {
 
 	var result int
 
-	if operator == "" { // добавить ошибку
-		fmt.Println("Неверное выражение")
-		return "0"
+	if operator == "" {
+		return "0", errors.New("Неверное выражение")
 	}
 
-	operands := strings.Split(input, operator)      //Эта функция разбивает строку на все подстроки
-	operand1, isRoman1 := parseOperand(operands[0]) //первая подстрока. является ли римским числом
-	operand2, isRoman2 := parseOperand(operands[1]) // аналогично выше
+	operands := strings.Split(input, operator)
+	if len(operands) != 2 {
+		return "0", errors.New("Неверное количество операндов")
+	}
+
+	operand1, isRoman1 := parseOperand(operands[0])
+	operand2, isRoman2 := parseOperand(operands[1])
 
 	if isRoman1 != isRoman2 {
-		fmt.Println("Введены числа разных форматов")
-		return "0"
+		return "0", errors.New("Введены числа разных форматов")
 	}
 
 	if isRoman1 {
 		if operand1 < operand2 {
-			fmt.Println("Первое римское число меньше второго римского числа")
+			return "0", errors.New("Первое римское число меньше второго римского числа")
 		}
 	}
 
@@ -60,16 +68,15 @@ func calculate(input string) string {
 		result = operand1 * operand2
 	case "/":
 		if operand2 == 0 {
-			fmt.Println("Деление на ноль!")
+			return "0", errors.New("Деление на ноль!")
 		}
 		result = operand1 / operand2
 	}
 
 	if isRoman1 {
-		return resultToRoman(result)
+		return resultToRoman(result), nil
 	}
-	return strconv.Itoa(result)
-
+	return strconv.Itoa(result), nil
 }
 
 func resultToRoman(n int) string {
@@ -113,21 +120,18 @@ func romanToArabic(roman string) (int, bool) {
 }
 
 func parseOperand(operand string) (int, bool) {
-	//operand = strings.Trim(operand, " ")  удаление пробелов
-	if strings.ContainsAny(operand, "IVX") { //провер есть ли в одной строке другая строка
+	if strings.ContainsAny(operand, "IVX") {
 		return romanToArabic(operand)
 	}
 
 	number := 0
 	_, err := fmt.Sscanf(operand, "%d", &number)
 	if err != nil {
-		fmt.Println("Неверный операнд")
-		return 0, false
+		panic(errors.New("Неверный операнд"))
 	}
 
 	if number < 0 || number > 10 {
-		fmt.Println("Операнд должен быть от 0 до 10")
-		return 0, false
+		panic(errors.New("Операнд должен быть от 0 до 10"))
 	}
 
 	return number, false
