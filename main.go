@@ -18,8 +18,7 @@ func main() {
 
 	result, err := calculate(input)
 	if err != nil {
-		fmt.Println("Ошибка:", err)
-		return
+		panic("Ошибка: " + err.Error())
 	}
 
 	fmt.Println("Результат:", result)
@@ -38,24 +37,30 @@ func calculate(input string) (string, error) {
 	var result int
 
 	if operator == "" {
-		return "0", errors.New("Неверное выражение")
+		panic(errors.New("Неверное выражение"))
 	}
 
 	operands := strings.Split(input, operator)
 	if len(operands) != 2 {
-		return "0", errors.New("Неверное количество операндов")
+		panic(errors.New("Неверное количество операндов"))
 	}
 
 	operand1, isRoman1 := parseOperand(operands[0])
 	operand2, isRoman2 := parseOperand(operands[1])
 
 	if isRoman1 != isRoman2 {
-		return "0", errors.New("Введены числа разных форматов")
+		panic(errors.New("Введены числа разных форматов"))
+	}
+
+	if isRoman1 {
+		if operand1 > 10 || operand2 > 10 {
+			panic(errors.New("Операнд более X"))
+		}
 	}
 
 	if isRoman1 {
 		if operand1 < operand2 {
-			return "0", errors.New("Первое римское число меньше второго римского числа")
+			panic(errors.New("Первое римское число меньше второго римского числа"))
 		}
 	}
 
@@ -68,7 +73,7 @@ func calculate(input string) (string, error) {
 		result = operand1 * operand2
 	case "/":
 		if operand2 == 0 {
-			return "0", errors.New("Деление на ноль!")
+			panic("Деление на ноль!")
 		}
 		result = operand1 / operand2
 	}
